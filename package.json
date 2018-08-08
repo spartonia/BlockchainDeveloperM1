@@ -1,0 +1,23 @@
+{
+  "name": "blockchaindeveloper_p2",
+  "version": "1.0.0",
+  "description": "'Udacity blockchain developer nanodegree project 2",
+  "main": "simpleChain.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/spartonia/BlockchainDeveloper_P2.git"
+  },
+  "author": "Saeed Partonia",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/spartonia/BlockchainDeveloper_P2/issues"
+  },
+  "homepage": "https://github.com/spartonia/BlockchainDeveloper_P2#readme",
+  "dependencies": {
+    "crypto-js": "^3.1.9-1",
+    "level": "^4.0.0"
+  }
+}
