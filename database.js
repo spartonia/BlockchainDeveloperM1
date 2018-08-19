@@ -13,7 +13,7 @@ exports.addBlock = (key, value) => {
 	return new Promise((resolve, reject) => {
 		db.put(key, value, (err) => {
 			if (err) reject('Block ' + key + ' submission failed', err);
-			resolve('Added block ' + key + ' to the chain.');
+			resolve(key);
 		})
 	});
 }
