@@ -55,8 +55,14 @@ class Blockchain{
     newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
 
     // Adding block object to chain
-    await db.addBlock(chainLength, JSON.stringify(newBlock))
-    console.log('Added Block # ' + chainLength)
+    try {
+      const key = await db.addBlock(chainLength, JSON.stringify(newBlock));
+      console.log('Added Block #' + key);
+      return key;
+    } catch (err) {
+      console.log(err)
+      return null;
+    }
   }
 
   // Get block height
@@ -122,23 +128,5 @@ class Blockchain{
   }
 }
 
-// Create Blockchain instance
-let blockchain = new Blockchain();
 
-//Add 10 blocks
-(function theLoop(i) {
-  setTimeout(function () {
-      blockchain.addBlock(new Block("Block " + i)).then(() =>{
-          if (--i) theLoop(i);
-          return
-      })
-  }, 100);
-})(10);
-
-console.log('Done adding!')
-
-// Validate chain
-setTimeout(function () {
-    console.log("Validating blockchain...");
-    blockchain.validateChain();
-}, 3000)
+module.exports = { Block, Blockchain }
