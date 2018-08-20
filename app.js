@@ -12,10 +12,21 @@ app.use(bodyParser.urlencoded({ extended: true }));
 let blockchain = new Blockchain();
 
 
+app.get('/', (req, res) => {
+  let msg = '';
+  msg += 'Wellcome to SimpleBlockchain API.<br>';
+  msg += 'Folllowing endpoints are available:<br>';
+  msg += '| method | endpoint   | description <br>';
+  msg += '| GET    | /height    | Blockchain height<br>';
+  msg += '| GET    | /block/:id | Get a specific block <br>';
+  msg += '| POST   | /block     | Add a new block to the chain';
+  res.send('<pre>' + msg + '</pre>');
+});
+
 app.get('/height', async (req, res) => {
   blockchain
     .getBlockHeight()
-    .then(h=>res.send('h:' + h))
+    .then(h=>res.send({'height': h}))
     .catch((err) => res.sendStatus(404));
 });
 
@@ -28,7 +39,7 @@ app.get('/block/:id', async (req, res) => {
 });
 
 app.post('/block', async (req, res) => {
-  const { body } = req.body
+  const { body } = req.body;
   if (!body) return res.status(400).send('"body" is required.')
 
   blockchain

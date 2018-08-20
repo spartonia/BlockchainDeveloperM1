@@ -1,6 +1,6 @@
 # Blockchain Data
 
-Blockchain has the potential to change the way that the world approaches data. Develop Blockchain skills by understanding the data model behind Blockchain by developing your own simplified private blockchain.
+Blockchain has the potential to change the way that the world approaches data. This project aims to provide a simple blockchain API based on **ExpressJS**.
 
 ## Getting Started
 
@@ -12,12 +12,17 @@ Installing Node and NPM is pretty straightforward using the installer package av
 
 ### Configuring your project
 
-- Install project dependencies.
+Install project dependencies.
 ```
 npm install
 ```
+and then run:
+```
+node app.js
+```
 
-## Retrieve an existig block (`GET`)
+## Testing
+### Retrieve an existig block (`GET`)
 To get a certail block, open a terminal window and run:
 ```
 curl "http://localhost:8000/block/<block#>"
