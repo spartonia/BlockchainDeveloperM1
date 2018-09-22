@@ -3,6 +3,7 @@ var bodyParser = require('body-parser');
 
 const bitcoin = require('bitcoinjs-lib');
 const bitcoinMessage = require('bitcoinjs-message');
+const SHA256 = require('crypto-js/sha256');
 
 const { Block, Blockchain } = require('./simpleChain');
 
@@ -16,6 +17,11 @@ let blockchain = new Blockchain();
 
 // Store address to timestamp
 var address_to_ts = {};
+
+// Store a list of validated addresses
+var validAddressList = []
+// TODO remove
+validAddressList.push('1H6V8rZfqQh7MUc6g8hcxibDTPQk7RmRBb')
 
 const validationWindow = 300;
 
@@ -45,23 +51,25 @@ app.get('/block/:id', async (req, res) => {
     .catch((err) => res.status(404).send(`Block #${id} not found.`));
 });
 
-app.post('/block', (req, res) => {
-  // TODO to be completed..
+app.post('/block', async (req, res) => {
   const { address, star } = req.body;
-  if (!address) return res.status(400).send('"address" is required.')
-  console.log(star);
-  star.story = '49cce61ec3e6ae664514d5fa5722d86069cf981318fc303750ce66032d0acff3';
-  const ts = Math.floor(+new Date/1000);
-  res.send({
-    hash: '49cce61ec3e6ae664514d5fa5722d86069cf981318fc303750ce66032d0acff3',
-    height: 1,
-    body: {
-      address: address,
-      star: star,
-    },
-    time: ts.toString(),
-    previousBlockHash: '49cce61ec3e6ae664514d5fa5722d86069cf981318fc303750ce66032d0acff3'
+  if (!address) return res.status(400).send({message: '"address" is required.'});
+  if (!validAddressList.includes(address)) {
+  	return res.status(400).send({message: 'Invalid address.'})
+  }
+  star.story = SHA256(JSON.stringify(star.story)).toString();
+  let starBlock = {
+  	address: address,
+  	star: star,
+  }
+  blockchain
+    .addBlock(new Block(starBlock))
+    .then(key => {
+      blockchain.getBlock(key)
+        .then(block => res.send(block))
+        .catch((err) => res.status(404).send(err))
   })
+  .catch((err) => res.status(500).send(e));
 });
 
 app.post('/requestValidation', (req, res) => {
@@ -92,20 +100,21 @@ app.post('/message-signature/validate', (req, res) => {
   const time_left = validationWindow-t_elapsed;
   //check if signature is valid..
   const isValid = bitcoinMessage.verify(message, address, signature);
-  isValid ?
-  // TODO: register to db as valid
-  res.send({
-    registerStar: true,
-    status: {
-      address: address,
-      requestTimestamp: ts,
-      message: message,
-      validationWindow: time_left,
-      messageSignature: 'valid'
-    }
-  })
-  :
-  res.status(400).send({
+  if (isValid) {
+	  // TODO: register to db as valid
+	  validAddressList.push(address);
+	  return res.send({
+	    registerStar: true,
+	    status: {
+	      address: address,
+	      requestTimestamp: ts,
+	      message: message,
+	      validationWindow: time_left,
+	      messageSignature: 'valid'
+	    }
+	  })
+	};
+  return res.status(400).send({
     registerStar: false,
     status: {
       address: address,
