@@ -4,6 +4,7 @@ var bodyParser = require('body-parser');
 const bitcoin = require('bitcoinjs-lib');
 const bitcoinMessage = require('bitcoinjs-message');
 const SHA256 = require('crypto-js/sha256');
+const db = require('./database');
 
 const { Block, Blockchain } = require('./simpleChain');
 
@@ -20,8 +21,6 @@ var address_to_ts = {};
 
 // Store a list of validated addresses
 var validAddressList = []
-// TODO remove
-validAddressList.push('1H6V8rZfqQh7MUc6g8hcxibDTPQk7RmRBb')
 
 const validationWindow = 300;
 
@@ -48,19 +47,19 @@ app.get('/block/:id', async (req, res) => {
   blockchain
     .getBlock(id)
     .then(block => res.send(block))
-    .catch((err) => res.status(404).send(`Block #${id} not found.`));
+    .catch((err) => res.status(404).send({message: `Block #${id} not found.`}));
 });
 
 app.post('/block', async (req, res) => {
   const { address, star } = req.body;
   if (!address) return res.status(400).send({message: '"address" is required.'});
   if (!validAddressList.includes(address)) {
-  	return res.status(400).send({message: 'Invalid address.'})
+    return res.status(400).send({message: 'Invalid address.'})
   }
-  star.story = SHA256(JSON.stringify(star.story)).toString();
+  star.story = Buffer.from(star.story).toString('base64');
   let starBlock = {
-  	address: address,
-  	star: star,
+    address: address,
+    star: star,
   }
   blockchain
     .addBlock(new Block(starBlock))
@@ -101,19 +100,19 @@ app.post('/message-signature/validate', (req, res) => {
   //check if signature is valid..
   const isValid = bitcoinMessage.verify(message, address, signature);
   if (isValid) {
-	  // TODO: register to db as valid
-	  validAddressList.push(address);
-	  return res.send({
-	    registerStar: true,
-	    status: {
-	      address: address,
-	      requestTimestamp: ts,
-	      message: message,
-	      validationWindow: time_left,
-	      messageSignature: 'valid'
-	    }
-	  })
-	};
+    // TODO: register to db as valid
+    validAddressList.push(address);
+    return res.send({
+      registerStar: true,
+      status: {
+        address: address,
+        requestTimestamp: ts,
+        message: message,
+        validationWindow: time_left,
+        messageSignature: 'valid'
+      }
+    })
+  };
   return res.status(400).send({
     registerStar: false,
     status: {
@@ -124,6 +123,42 @@ app.post('/message-signature/validate', (req, res) => {
       messageSignature: 'inValid'
     }
   });
+});
+
+app.get('/stars/address::adr', async (req, res) => {
+  const { adr } = req.params;
+  if (!adr) return res.status(400).send({message: '"address" is required.'})
+  let validBlocks = []
+  try {
+    let height = await blockchain.getBlockHeight();
+    for (var i = 0; i < height; i++) {
+      let block = await blockchain.getBlock(i);
+      if (block.body.address === adr) {
+        block.body.star.storyDecoded = Buffer.from(block.body.star.story, 'base64').toString('ascii');
+        validBlocks.push(block);
+      }
+    }
+  } catch (err) {
+    console.log(err);
+  }
+  return res.send(validBlocks);
+});
+
+app.get('/stars/hash::hash', async (req, res) => {
+  const { hash } = req.params;
+  if (!hash) return res.status(400).send({message: '"hash" is required.'})
+  try {
+    let height = await blockchain.getBlockHeight();
+    for (var i = 0; i < height; i++) {
+      let block = await blockchain.getBlock(i);
+      if (block.hash === hash) {
+        return res.send(block);
+      }
+    }
+  } catch (err) {
+    console.log(err);
+  }
+  return res.status(404).send({message: 'Block not found.'});
 });
 
 const PORT = 8000;
