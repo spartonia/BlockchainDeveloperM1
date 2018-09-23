@@ -28,10 +28,15 @@ app.get('/', (req, res) => {
   let msg = '';
   msg += 'Wellcome to SimpleBlockchain API.<br>';
   msg += 'Folllowing endpoints are available:<br>';
-  msg += '| method | endpoint   | description <br>';
-  msg += '| GET    | /height    | Blockchain height<br>';
-  msg += '| GET    | /block/:id | Get a specific block <br>';
-  msg += '| POST   | /block     | Add a new block to the chain';
+  msg += '| method | endpoint                    | description <br>';
+  msg += '-----------------------------------------------------------------------------------------<br>';
+  msg += '| GET    | /height                     | Blockchain height<br>';
+  msg += '| POST   | /requestValidation          | Request validation<br>';
+  msg += '| POST   | /message-signature/validate | POst credentials to be vlidated<br>';
+  msg += '| POST   | /block                      | Add a new block to the chain<br>';
+  msg += '| GET    | /stars/hash:[HASH]          | Lookup a star by hash<br>';
+  msg += '| GET    | /stars/address:[ADDRESS]    | Lookup stars registered by given address<br>';
+  msg += '| GET    | /block/[HEIGHT]             | Lookup a star registered at given block number<br>';
   res.send('<pre>' + msg + '</pre>');
 });
 
