@@ -81,6 +81,7 @@ app.post('/block', async (req, res) => {
     .addBlock(new Block(starBlock))
     .then(key => {
       validAddressList = validAddressList.filter(item => item !== address);
+      delete address_to_ts[address];
       blockchain.getBlock(key)
         .then(block => res.send(block))
         .catch((err) => res.status(404).send(err))
@@ -102,7 +103,7 @@ app.post('/requestValidation', (req, res) => {
   const time_left = validationWindow-t_elapsed;
   res.send({
     address: address,
-    requestTimestamp: ts,
+    requestTimeStamp: ts,
     message: messageToSign,
     validationWindow: time_left
   });
@@ -129,7 +130,7 @@ app.post('/message-signature/validate', (req, res) => {
       registerStar: true,
       status: {
         address: address,
-        requestTimestamp: ts,
+        requestTimeStamp: ts,
         message: message,
         validationWindow: time_left,
         messageSignature: 'valid'
@@ -140,7 +141,7 @@ app.post('/message-signature/validate', (req, res) => {
     registerStar: false,
     status: {
       address: address,
-      requestTimestamp: ts,
+      requestTimeStamp: ts,
       message: message,
       validationWindow: time_left,
       messageSignature: 'inValid'
