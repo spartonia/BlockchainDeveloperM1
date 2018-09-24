@@ -27,7 +27,6 @@ Folllowing endpoints are available:
 | method | endpoint                    | description
 -----------------------------------------------------------------------------------------
 | GET    | /height                     | Blockchain height
-| GET    | /block/:id                  | Get a specific block
 | POST   | /requestValidation          | Request validation
 | POST   | /message-signature/validate | POst credentials to be vlidated
 | POST   | /block                      | Add a new block to the chain
@@ -85,15 +84,15 @@ The following endpoints can be used to lookup in the blockchain/
 
 Lookup a star by hash
 ```bash
-http://localhost:8000/stars/hash:[HASH]
+$ curl http://localhost:8000/stars/hash:[HASH]
 ```
 
 Lookup all stars registered by given (wallet) address
 ```bash
-http://localhost:8000/stars/address:[ADDRESS]
+$ curl http://localhost:8000/stars/address:[ADDRESS]
 ```
 
 Lookup a star registered at given block number
 ```bash
-http://localhost:8000/stars/hash:[HASH]
+$ curl http://localhost:8000/block/[HEIGHT]
 ```
