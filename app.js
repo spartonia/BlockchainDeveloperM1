@@ -24,6 +24,13 @@ var validAddressList = []
 
 const validationWindow = 300;
 
+const decodeBlock = block => {
+  block.body.star.storyDecoded = Buffer.
+                                  from(block.body.star.story, 'base64')
+                                  .toString('ascii');
+  return block;
+}
+
 app.get('/', (req, res) => {
   let msg = '';
   msg += 'Wellcome to SimpleBlockchain API.<br>';
@@ -51,13 +58,17 @@ app.get('/block/:id', async (req, res) => {
   const { id } = req.params;
   blockchain
     .getBlock(id)
-    .then(block => res.send(block))
+    .then(block => res.send(decodeBlock(block)))
     .catch((err) => res.status(404).send({message: `Block #${id} not found.`}));
 });
 
 app.post('/block', async (req, res) => {
   const { address, star } = req.body;
   if (!address) return res.status(400).send({message: '"address" is required.'});
+  if (!star) return res.status(400).send({message: '"star" is required.'});
+  if (!star.dec) return res.status(400).send({message: '"star.dec" is required.'});
+  if (!star.ra) return res.status(400).send({message: '"star.ra" is required.'});
+  if (!star.story) return res.status(400).send({message: '"star.story" is required.'});
   if (!validAddressList.includes(address)) {
     return res.status(400).send({message: 'Invalid address.'})
   }
@@ -69,6 +80,7 @@ app.post('/block', async (req, res) => {
   blockchain
     .addBlock(new Block(starBlock))
     .then(key => {
+      validAddressList = validAddressList.filter(item => item !== address);
       blockchain.getBlock(key)
         .then(block => res.send(block))
         .catch((err) => res.status(404).send(err))
@@ -78,15 +90,21 @@ app.post('/block', async (req, res) => {
 
 app.post('/requestValidation', (req, res) => {
   const { address } = req.body;
-  const ts = Math.floor(+new Date/1000);
+  if (!address) return res.status(400).send({message: '"address" is required.'});
+  // prevoius request registered
+  let ts = address_to_ts[address];
+  // if not, register as new request
+  ts = !ts ? Math.floor(+new Date/1000): ts;
+  const ts_now = Math.floor(+new Date/1000);
   address_to_ts[address] = ts;
-  console.log(ts);
   const messageToSign = `${address}:${ts}:starRegistry`
+  const t_elapsed = ts_now - ts;
+  const time_left = validationWindow-t_elapsed;
   res.send({
     address: address,
     requestTimestamp: ts,
     message: messageToSign,
-    validationWindow: validationWindow
+    validationWindow: time_left
   });
 });
 
@@ -95,7 +113,7 @@ app.post('/message-signature/validate', (req, res) => {
   const ts = address_to_ts[address];
   const ts_now = Math.floor(+new Date/1000);
   if (!ts) return res.status(404).send(`address ${address} not found!`);
-  t_elapsed = ts_now - ts;
+  const t_elapsed = ts_now - ts;
   if (t_elapsed > validationWindow) {
     delete address_to_ts[address];
     return res.status(400).send(`Request time expired! Submit a new request.`)
@@ -139,7 +157,7 @@ app.get('/stars/address::adr', async (req, res) => {
     for (var i = 0; i < height; i++) {
       let block = await blockchain.getBlock(i);
       if (block.body.address === adr) {
-        block.body.star.storyDecoded = Buffer.from(block.body.star.story, 'base64').toString('ascii');
+        block = decodeBlock(block);
         validBlocks.push(block);
       }
     }
@@ -157,6 +175,7 @@ app.get('/stars/hash::hash', async (req, res) => {
     for (var i = 0; i < height; i++) {
       let block = await blockchain.getBlock(i);
       if (block.hash === hash) {
+        block = decodeBlock(block);
         return res.send(block);
       }
     }
