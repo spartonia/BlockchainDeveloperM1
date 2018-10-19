@@ -1,4 +1,5 @@
 chainData/
+workspace/
 # Logs
 logs
 *.log
